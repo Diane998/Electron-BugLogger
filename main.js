@@ -1,6 +1,10 @@
 const path = require('path');
 const url = require('url');
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
+const connectDB = require('./config/db');
+const Log = require('./models/Log');
+
+connectDB();
 
 let mainWindow;
 
@@ -63,8 +67,6 @@ function createMainWindow() {
 
   mainWindow.on('closed', () => (mainWindow = null));
 }
-
-app.on('ready', createMainWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
