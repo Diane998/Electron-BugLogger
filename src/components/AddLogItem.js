@@ -14,9 +14,7 @@ const AddLogItem = ({ addItem }) => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    let _id = Math.floor(Math.round() * 90000) + 10000;
-    let created = new Date();
-    addItem({ text, user, priority, _id, created });
+    addItem({ text, user, priority });
     setLog({ text: '', user: '', priority: '' });
   };
 
