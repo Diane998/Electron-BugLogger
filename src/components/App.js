@@ -19,10 +19,14 @@ const App = () => {
     ipcRenderer.on('logs:get', (e, logs) => {
       setLogs(JSON.parse(logs));
     });
+    ipcRenderer.on('logs:clear', () => {
+      setLogs([]);
+      showAlert('Logs Cleared');
+    });
   }, []);
 
   const addItem = item => {
-    if (!!!item.text && !!!item.user && !!!item.priority) {
+    if (!!!item.text || !!!item.user || !!!item.priority) {
       showAlert('Please enter all fields', 'danger');
       return false;
     }
@@ -33,7 +37,8 @@ const App = () => {
   };
 
   const deleteItem = _id => {
-    setLogs(logs.filter(item => item._id !== _id));
+    // setLogs(logs.filter(item => item._id !== _id));
+    ipcRenderer.send('logs:delete', _id);
     showAlert('Log Removed');
   };
 

@@ -1,6 +1,6 @@
 const path = require('path');
 const url = require('url');
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const connectDB = require('./config/db');
 const Log = require('./models/Log');
 
@@ -8,7 +8,8 @@ connectDB();
 
 let mainWindow;
 
-let isDev = false;
+let isDev = false,
+  isMac = process.platform === 'darwin';
 
 if (
   process.env.NODE_ENV !== undefined &&
@@ -68,7 +69,35 @@ function createMainWindow() {
   mainWindow.on('closed', () => (mainWindow = null));
 }
 
-app.on('ready', createMainWindow);
+const menu = [
+  ...(isMac ? [{ role: 'appMenu' }] : []),
+  { role: 'fileMenu' },
+  { role: 'editMenu' },
+  {
+    label: 'Logs',
+    submenu: [{ label: 'Clear Logs', click: () => clearLogs() }]
+  },
+  ...(isDev
+    ? [
+        {
+          label: 'Developer',
+          submenu: [
+            { role: 'reload' },
+            { role: 'forcereload' },
+            { type: 'separator' },
+            { role: 'toggledevtools' }
+          ]
+        }
+      ]
+    : [])
+];
+
+app.on('ready', () => {
+  createMainWindow();
+
+  const mainMenu = Menu.buildFromTemplate(menu);
+  Menu.setApplicationMenu(mainMenu);
+});
 
 ipcMain.on('logs:load', sendLogs);
 
@@ -81,10 +110,28 @@ async function sendLogs() {
   }
 }
 
+async function clearLogs() {
+  try {
+    await Log.deleteMany({});
+    mainWindow.webContents.send('logs:clear');
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 // Create log
 ipcMain.on('logs:add', async (e, item) => {
   try {
     await Log.create(item);
+    sendLogs();
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+ipcMain.on('logs:delete', async (e, id) => {
+  try {
+    await Log.findOneAndDelete({ _id: id });
     sendLogs();
   } catch (err) {
     console.log(err);
