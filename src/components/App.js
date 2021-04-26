@@ -22,7 +22,7 @@ const App = () => {
   }, []);
 
   const addItem = item => {
-    if (item.text === '' && item.user === '' && item.priority === '') {
+    if (!!!item.text && !!!item.user && !!!item.priority) {
       showAlert('Please enter all fields', 'danger');
       return false;
     }
@@ -30,7 +30,6 @@ const App = () => {
     // setLogs([...logs, item]);
     ipcRenderer.send('logs:add', item);
     showAlert('Log added');
-    console.log(logs);
   };
 
   const deleteItem = _id => {
